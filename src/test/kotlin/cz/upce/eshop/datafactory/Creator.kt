@@ -2,15 +2,14 @@ package cz.upce.eshop.datafactory
 
 import org.apache.commons.beanutils.PropertyUtils
 import org.apache.commons.lang3.reflect.FieldUtils
-import org.apache.commons.logging.Log
-import org.apache.commons.logging.LogFactory
+import org.apache.commons.logging.*
 import org.springframework.context.ApplicationContext
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
 import java.sql.Date
-import javax.persistence.Entity
-import javax.persistence.Id
-import kotlin.reflect.KClass
+import javax.persistence.*
+import kotlin.reflect.*
+import kotlin.reflect.full.hasAnnotation
 
 @Component
 class Creator(
@@ -19,9 +18,7 @@ class Creator(
 
 	private val log: Log = LogFactory.getLog(Creator::class.java)
 
-	fun saveMore(vararg entities: Any) = entities.forEach { entity ->
-		saveEntity(entity)
-	}
+	fun saveMore(vararg entities: Any) = entities.forEach { entity -> saveEntity(entity) }
 
 	fun save(entity: Any) = saveEntity(entity)
 
@@ -30,19 +27,14 @@ class Creator(
 		try {
 			val props = PropertyUtils.describe(entity)
 			initializeListOfFields(entity)
-
-			for (propName in props.keys) {
-				props[propName]?.let { saveChildEntity(it) }
-			}
-
+			props.keys.forEach { propName -> props[propName]?.let { saveChildEntity(it) } }
 			val dao = getDao(entity)
-
 			if (deleteOthers) {
 				dao.deleteAllInBatch()
 			}
-
-			dao.save(cast(entity, entity::class))
-
+			dao.apply {
+				this.save(entity)
+			}
 		} catch (e: Exception) {
 			throw IllegalStateException("Problem", e)
 		}
@@ -50,9 +42,7 @@ class Creator(
 	}
 
 	private fun initializeListOfFields(entity: Any) {
-		val allFields = FieldUtils.getAllFieldsList(entity.javaClass)
-
-		allFields.forEach { field ->
+		FieldUtils.getAllFieldsList(entity.javaClass).forEach { field ->
 			try {
 				field.isAccessible = true
 				var propValue = FieldUtils.readField(field, entity)
@@ -82,31 +72,27 @@ class Creator(
 			}
 		}
 	}
-	
-	private fun getDao(entity: Any): JpaRepository<Any, *> {
-		val repoClassName = entity::class.simpleName
-		val repositoryBeanName =
-			"""${repoClassName?.substring(0, 1)?.toLowerCase()}${repoClassName?.substring(1)}Repository"""
-		return applicationContext.getBean(repositoryBeanName) as JpaRepository<Any, *>
-	}
 
 	private fun saveChildEntity(propValue: Any) {
-		val valueClass = propValue.javaClass
-		val isEntity: Boolean = isEntity(valueClass)
-		if (isEntity) {
+		val valueClass = propValue::class
+		if (valueClass.hasAnnotation<Entity>()) {
 			saveEntity(propValue)
-			val daoName = """${
-				valueClass.simpleName.substring(0, 1).toLowerCase()
-			}${valueClass.simpleName.substring(1)}Repository"""
+			val daoName = getInstanceName(valueClass)
 			(applicationContext.getBeansOfType(JpaRepository::class.java)[daoName] as JpaRepository<Any, *>).apply {
-				save(cast(propValue, propValue::class))
+				this.save(propValue)
 			}
 		}
 	}
 
-	private fun <T : Any> cast(any: Any, clazz: KClass<out T>): T = clazz.javaObjectType.cast(any)
+	private fun getDao(entity: Any): JpaRepository<Any, *> {
+		val repoClassName = entity::class
+		val repositoryBeanName = getInstanceName(repoClassName)
+		return applicationContext.getBean(repositoryBeanName) as JpaRepository<Any, *>
+	}
 
-	private fun isEntity(valueClass: Class<*>): Boolean {
-		return valueClass.getDeclaredAnnotationsByType(Entity::class.java).isNotEmpty()
+	private fun getInstanceName(valueClass: KClass<out Any>): String {
+		return """${
+			valueClass.simpleName?.substring(0, 1)?.toLowerCase()
+		}${valueClass.simpleName?.substring(1)}Repository"""
 	}
 }

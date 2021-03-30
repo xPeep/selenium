@@ -36,6 +36,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("commons-beanutils:commons-beanutils:1.9.4")
 	testImplementation("org.apache.commons:commons-lang3:3.12.0")
+	testImplementation("org.seleniumhq.selenium:selenium-java:3.141.59")
 }
 
 tasks.withType<KotlinCompile> {

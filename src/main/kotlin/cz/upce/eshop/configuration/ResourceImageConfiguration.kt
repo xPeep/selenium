@@ -10,6 +10,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class ResourceImageConfiguration : WebMvcConfigurer {
 	override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
 		registry.addResourceHandler("/images/**")
-			.addResourceLocations("file:/home/pfilip/Projects/upce/eshop/images/")
+			.addResourceLocations("file:C:\\Users\\Pepe\\IdeaProjects\\nnpia-eshop-full-kotlin\\images\\")
 	}
 }

@@ -1,5 +1,6 @@
 package cz.upce.eshop.entity
 
+import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -20,7 +21,22 @@ class Product(
 	@OneToMany(mappedBy = "id", fetch = FetchType.LAZY)
 	var productInOrders: MutableSet<OrderHasProduct>? = null,
 
-	@ManyToOne(optional = false)
-	var supplier: Supplier = Supplier()
+	@ManyToOne()
+	var supplier: Supplier? = null
+) {
+	override fun equals(o: Any?): Boolean {
+		if (this === o) {
+			return true
+		}
+		if (o == null || javaClass != o.javaClass) {
+			return false
+		}
+		val product = o as Product
+		return Objects.equals(id, product.id) && Objects.equals(productName, product.productName)
+	}
 
-)
+	override fun hashCode(): Int {
+		return Objects.hash(id, productName)
+	}
+
+}

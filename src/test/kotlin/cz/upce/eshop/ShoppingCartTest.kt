@@ -19,16 +19,15 @@ internal class ShoppingCartTest
 	fun addOneToShoppingCart() {
 		val product = Product()
 		product.productName = "MyProduct"
-		productRepository.save<Product>(product)
+		productRepository.save(product)
 		val all = productRepository.findAll()
 		val productId = all.first()?.id ?: -1
 		shoppingCartService.add(productId)
 
-
 		// počet prvků v košíku = 1
 		Assertions.assertThat(shoppingCartService.cart.size).isEqualTo(1)
 		// obsahuje právě vložený produkt
-		Assertions.assertThat(shoppingCartService.cart.containsKey(all[0])).isTrue()
+		Assertions.assertThat(shoppingCartService.cart.containsKey(all[0])).isTrue
 		// obsahuje vložený produkt v počtu = 1
 		Assertions.assertThat(shoppingCartService.cart[all[0]]).isEqualTo(1)
 		shoppingCartService.add(productId)

@@ -11,7 +11,7 @@ import java.nio.file.StandardCopyOption
 class FileServiceImpl : FileService {
 	override fun upload(image: MultipartFile?): String? {
 		try {
-			val path = Paths.get("/home/pfilip/Projects/upce/eshop/images/" + image!!.originalFilename)
+			val path = Paths.get("C:\\Users\\Pepe\\IdeaProjects\\nnpia-eshop-full-kotlin\\images\\" + image!!.originalFilename)
 			Files.copy(image.inputStream, path, StandardCopyOption.REPLACE_EXISTING)
 		} catch (e: IOException) {
 			e.printStackTrace()
